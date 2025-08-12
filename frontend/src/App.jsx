@@ -8,6 +8,8 @@ export default function App() {
     const [error, setError] = useState("");
     const [data, setData] = useState(null);
 
+    const API_BASE = import.meta.env.VITE_API_BASE;
+
     const canSearch = artist.trim().length > 1;
 
     async function onSubmit(e) {
@@ -15,20 +17,14 @@ export default function App() {
         if (!canSearch) return;
         setLoading(true); setError(""); setData(null);
         try {
-            // TEMP demo: replace with backend call later
-            await new Promise(r => setTimeout(r, 700));
-            setData({
-                artist: artist.trim(),
-                tour: tour.trim() || null,
-                total_setlists: 24,
-                confidence: 0.78,
-                songs: [
-                    { title: "Sample Song A", appearances: 20, probability: 0.16 },
-                    { title: "Sample Song B", appearances: 18, probability: 0.12 },
-                    { title: "Sample Song C", appearances: 17, probability: 0.10 },
-                    { title: "Sample Song D", appearances: 15, probability: 0.08 },
-                ],
-            });
+            const url = new URL('/api/predict', API_BASE);
+            url.searchParams.set('artist', artist.trim());
+            if (tour.trim()) url.searchParams.set('tour', tour.trim());
+
+            const res = await fetch(url.toString());
+            if (!res.ok) throw new Error('Request failed');
+            const payload = await res.json();
+            setData(payload);
         } catch {
             setError("Something went wrong. Try again.");
         } finally {
