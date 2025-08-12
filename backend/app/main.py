@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from .setlistfm import search_artist, fetch_setlists
 
 API = FastAPI(title="Setify API")
 
@@ -11,6 +12,14 @@ API.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@API.get("/api/artist")
+async def get_artist(artist: str = Query(..., min_length=2)):
+    a = await search_artist(artist)
+    if not a:
+        raise HTTPException(status_code=404, detail="Artist not found")
+    return {"name": a.get("name"), "mbid": a.get("mbid")}
+
 
 @API.get("/api/predict")
 def predict(artist: str, tour: str = None):
@@ -26,3 +35,4 @@ def predict(artist: str, tour: str = None):
             {"title": "Sample Song D", "probability": 0.08, "appearances": 15},
         ],
     }
+
