@@ -20,6 +20,25 @@ async def get_artist(artist: str = Query(..., min_length=2)):
         raise HTTPException(status_code=404, detail="Artist not found")
     return {"name": a.get("name"), "mbid": a.get("mbid")}
 
+@API.get("/api/setlists")
+async def get_setlists(artist: str = Query(..., min_length=2), tour: str | None = None):
+    a = await search_artist(artist)
+    if not a:
+        raise HTTPException(status_code=404, detail="Artist not found")
+    sets = await fetch_setlists(a.get("mbid"), tour, max_pages=1)
+    if not sets:
+        raise HTTPException(status_code=404, detail="No setlists found for this query")
+
+    preview = []
+    for s in sets[:3]:
+        preview.append({
+            "eventDate": s.get("eventDate"),
+            "venue": (s.get("venue") or {}).get("name"),
+            "city": ((s.get("venue") or {}).get("city") or {}).get("name"),
+            "tour": (s.get("tour") or {}).get("name"),
+            "songs": [song.get("name") for ss in (s.get("sets", {}) or {}).get("set", []) for song in ss.get("song", [])][:5]
+        })
+    return {"count": len(sets), "preview": preview}
 
 @API.get("/api/predict")
 def predict(artist: str, tour: str = None):

@@ -27,3 +27,19 @@ async def search_artist(name: str) -> Optional[Dict]:
         exact = next((a for a in artists if a.get("name", "").lower() == name.lower()), None)
         return exact or artists[0]
 
+async def fetch_setlists(artist_mbid: str, tour: Optional[str], max_pages: int = 3) -> List[Dict]:
+    all_sets: List[Dict] = []
+    async with httpx.AsyncClient(timeout=30) as client:
+        for page in range(1, max_pages + 1):
+            params = {"artistMbid": artist_mbid, "p": page}
+            if tour:
+                params["tourName"] = tour
+            r = await client.get(f"{BASE}/search/setlists", params=params, headers=HEADERS)
+            if r.status_code == 404:
+                break
+            r.raise_for_status()
+            page_sets = r.json().get("setlist", [])
+            if not page_sets:
+                break
+            all_sets.extend(page_sets)
+    return all_sets
