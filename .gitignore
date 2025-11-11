@@ -31,8 +31,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-backend/.env
-backend/.venv/
+.env
+.venv/
 backend/.env.*.local
 
 # Distribution / packaging
