@@ -1,7 +1,7 @@
-export default function ProbabilityBar({ p }) {
-    const pct = Math.max(0, Math.min(100, (p || 0) * 100));
+export default function ProbabilityBar({ probability }) {
+    const pct = Math.max(0, Math.min(100, (probability || 0) * 100));
     return (
-        <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden" role="presentation">
             <div
                 className="h-full bg-[--color-brand] transition-[width] duration-500"
                 style={{ width: `${pct.toFixed(1)}%` }}
