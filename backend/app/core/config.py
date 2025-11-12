@@ -1,6 +1,9 @@
 import os
 from functools import lru_cache
 from typing import List
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Settings:
     """Application configuration from environment variables"""
@@ -10,7 +13,7 @@ class Settings:
         self.setlistfm_api_key: str = os.getenv("SETLISTFM_API_KEY", "")
         allowed = os.getenv(
             "API_ALLOWED_ORIGINS",
-            "http://localhost:5173,http://127.0.0.1:5173",
+            "http://127.0.0.1:8000",
         )
         self.api_allowed_origins: List[str] = [origin.strip() for origin in allowed.split(",") if origin.strip()]
 

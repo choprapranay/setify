@@ -10,6 +10,15 @@ from dotenv import load_dotenv
 from ..core.config import get_settings
 from ..domain.entities.models import Artist, Setlist, SetlistMeta, SongAppearance
 
+
+class SetlistFMError(RuntimeError):
+    """Base error raised for Setlist.fm client failures."""
+
+
+class SetlistFMCredentialsError(SetlistFMError):
+    """Raised when Setlist.fm rejects requests because of missing/invalid credentials."""
+
+
 load_dotenv()
 
 # Helper Function
@@ -37,6 +46,11 @@ class SetlistFMClient:
         self._timeout = httpx.Timeout(30.0)
 
     async def _request(self, client: httpx.AsyncClient, path: str, params: Dict) -> Dict:
+        if not self._headers.get("x-api-key"):
+            raise SetlistFMCredentialsError(
+                "Setlist.fm API key is missing. Set the SETLISTFM_API_KEY environment variable."
+            )
+
         response = await client.get(f"{self._base}{path}", params=params, headers=self._headers)
         if response.status_code == 404:
             return {}
@@ -44,6 +58,10 @@ class SetlistFMClient:
             retry = int(response.headers.get("Retry-After", "1"))
             await asyncio.sleep(min(retry, 5))
             response = await client.get(f"{self._base}{path}", params=params, headers=self._headers)
+        if response.status_code in {401, 403}:
+            raise SetlistFMCredentialsError(
+                "Setlist.fm rejected the request (status %s). Verify SETLISTFM_API_KEY is correct." % response.status_code
+            )
         response.raise_for_status()
         return response.json()
 
