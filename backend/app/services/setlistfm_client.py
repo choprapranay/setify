@@ -7,8 +7,8 @@ from typing import Dict, List, Optional, Tuple
 import httpx
 from dotenv import load_dotenv
 
-from ..core.config import get_settings
-from ..domain.entities.models import Artist, Setlist, SetlistMeta, SongAppearance
+from backend.app.core.config import get_settings
+from backend.app.entities.models import Artist, Setlist, SetlistMeta, SongAppearance
 
 
 class SetlistFMError(RuntimeError):

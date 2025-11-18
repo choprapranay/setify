@@ -7,7 +7,7 @@ from math import exp, log
 from statistics import median
 from typing import Dict, Optional
 
-from ..entities.models import PredictionSummary, Setlist, SetlistMeta, SongPrediction
+from backend.app.entities.models import PredictionSummary, Setlist, SetlistMeta, SongPrediction
 
 
 @dataclass
@@ -31,17 +31,8 @@ class RecencyBetaPredictionService:
         artist_mbid: str,
         meta: SetlistMeta,
         tour: Optional[str],
-        half_life_days: Optional[int] = None,
-        alpha: Optional[float] = None,
-        beta: Optional[float] = None,
-        top_k: Optional[int] = None,
     ) -> PredictionSummary:
-        cfg = PredictionConfig(
-            half_life_days=half_life_days or self.config.half_life_days,
-            alpha=alpha if alpha is not None else self.config.alpha,
-            beta=beta if beta is not None else self.config.beta,
-            top_k=top_k or self.config.top_k,
-        )
+        cfg = self.config
 
         filtered = [s for s in setlists if not tour or (s.tour or "").lower() == (tour or "").lower()]
         if not filtered:
@@ -99,11 +90,17 @@ class RecencyBetaPredictionService:
             return (weighted + cfg.alpha) / (effective_shows + cfg.alpha + cfg.beta)
 
         all_probs = [smoothed_prob(stats["weighted"]) for stats in song_stats.values()]
-        entropy = -sum(p * log(p) for p in all_probs if p > 0)
-        max_entropy = log(max(1, len(all_probs)))
+        prob_total = sum(all_probs)
+        if prob_total > 0:
+            normalized = [p / prob_total for p in all_probs]
+        else:
+            normalized = []
+
+        entropy = -sum(p * log(p) for p in normalized if p > 0)
+        max_entropy = log(max(1, len(normalized))) if normalized else 0.0
         sharpness = 1.0 - (entropy / max_entropy) if max_entropy > 0 else 0.0
         sample_factor = 1.0 - exp(-effective_shows / 5.0)
-        confidence = min(0.98, round(0.5 * sharpness + 0.5 * sample_factor, 3))
+        confidence = min(0.98, max(0.0, round(0.5 * sharpness + 0.5 * sample_factor, 3)))
 
         ranked = sorted(
             song_stats.items(),
