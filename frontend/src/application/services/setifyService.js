@@ -16,15 +16,11 @@ export async function loadSetlists({ mbid, pages }) {
     };
 }
 
-export async function predictSetlist({ mbid, pages, tour, topK, halfLifeDays, alpha, beta }) {
+export async function predictSetlist({ mbid, pages, tour }) {
     const prediction = await fetchPrediction({
         mbid,
         pages,
         tour,
-        topK,
-        halfLifeDays,
-        alpha,
-        beta,
     });
     return createPrediction(prediction);
 }

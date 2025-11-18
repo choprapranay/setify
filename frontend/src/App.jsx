@@ -1,173 +1,121 @@
 import React from "react";
 import SongTable from "./presentation/components/SongTable.jsx";
 import { usePredictor } from "./presentation/hooks/usePredictor";
-const cls = (...xs) => xs.filter(Boolean).join(" ");
 
 export default function App() {
     const {
         state: {
             artistQuery,
             artist,
-            tours,
-            selectedTour,
-            pages,
-            topK,
-            halfLife,
-            alpha,
-            beta,
             prediction,
             error,
-            loadingArtist,
-            loadingPrediction,
+            loading,
             sortedSongs,
             sortKey,
             sortDir,
-            canSearch,
+            canPredict,
             formatNumber,
         },
-        actions: {
-            setArtistQuery,
-            setSelectedTour,
-            setPages,
-            setTopK,
-            setHalfLife,
-            setAlpha,
-            setBeta,
-            search,
-            predict,
-            toggleSort,
-        },
+        actions: { setArtistQuery, predict, toggleSort },
     } = usePredictor();
 
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        predict();
+    };
+
     return (
-        <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 text-gray-900">
-            <header className="sticky top-0 z-10 backdrop-blur bg-white/70 border-b">
-                <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-                    <h1 className="text-2xl font-semibold tracking-tight">Setify</h1>
+        <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
+            <GradientBackdrop />
+            <div className="relative z-10 mx-auto flex max-w-5xl flex-col gap-10 px-4 py-10">
+                <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+                    <div className="space-y-3">
+                        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.45em] text-slate-400">
+                            <span className="h-2 w-2 rounded-full bg-[--color-brand] shadow-[0_0_18px_rgba(192,132,252,0.8)]" />
+                            Live setlist oracle
+                        </span>
+                        <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">Setify</h1>
+                        <p className="max-w-xl text-base text-slate-300">
+                            Type an artist, hit predict, and we will analyse their recent shows to surface the
+                            songs most likely to appear on a setlist.
+                        </p>
+                    </div>
                     {prediction && (
-                        <div className="flex items-center gap-2 text-sm">
-                                                    <span className="px-2 py-0.5 rounded-full bg-gray-100">
-                                confidence {formatNumber(prediction.confidence * 100, 1)}%
-                            </span>
-                            <span className="px-2 py-0.5 rounded-full bg-gray-100">
-                                shows {formatNumber(prediction.setsConsidered)}
-                            </span>
-                            <span className="px-2 py-0.5 rounded-full bg-gray-100">
-                                unique {formatNumber(prediction.uniqueSongs)}
-                            </span>
+                        <div className="flex flex-wrap gap-3">
+                            <StatPill
+                                label="Confidence"
+                                value={`${formatNumber(prediction.confidence * 100, 1)}%`}
+                            />
+                            <StatPill label="Shows" value={formatNumber(prediction.setsConsidered)} />
+                            <StatPill label="Unique songs" value={formatNumber(prediction.uniqueSongs)} />
                         </div>
                     )}
-                </div>
-            </header>
+                </header>
 
-            <main className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-                <section className="bg-white shadow-sm rounded-2xl p-4 border">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm mb-1">
-                                Artist <span className="text-red-500">*</span>
+                <section className="rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-[0_30px_80px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+                            <label className="flex flex-1 flex-col text-sm font-medium text-slate-300">
+                                Artist
+                                <div className="mt-2 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 shadow-inner transition focus-within:border-[--color-brand] focus-within:bg-slate-900/60">
+                                    <span className="text-lg text-[--color-brand]">🎶</span>
+                                    <input
+                                        className="w-full bg-transparent text-base font-medium text-white placeholder:text-slate-500 focus:outline-none"
+                                        placeholder="e.g. The 1975"
+                                        value={artistQuery}
+                                        onChange={(event) => setArtistQuery(event.target.value)}
+                                    />
+                                </div>
                             </label>
-                            <input
-                                className="w-full border rounded-xl px-3 py-2 focus:outline-none focus:ring"
-                                placeholder="e.g., Coldplay"
-                                value={artistQuery}
-                                onChange={(e) => setArtistQuery(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && search()}
-                            />
-                            <div className="mt-2 flex gap-2 items-center">
-                                <button
-                                    onClick={search}
-                                    disabled={!canSearch || loadingArtist}
-                                    className={cls(
-                                        "px-4 py-2 rounded-xl text-white",
-                                        loadingArtist ? "bg-gray-400" : "bg-black hover:opacity-90"
-                                    )}
-                                >
-                                    {loadingArtist ? "Searching…" : "Find artist"}
-                                </button>
-                                {artist && <span className="text-sm text-gray-600">{artist.name}</span>}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm mb-1">Tour (optional)</label>
-                            <select
-                                className="w-full border rounded-xl px-3 py-2"
-                                value={selectedTour ?? ""}
-                                onChange={(e) => setSelectedTour(e.target.value || null)}
+                            <button
+                                type="submit"
+                                disabled={loading || !canPredict}
+                                className="group relative inline-flex items-center justify-center overflow-hidden rounded-2xl px-6 py-3 font-semibold text-white shadow-lg transition focus:outline-none focus:ring-2 focus:ring-[--color-brand]/70 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                <option value="">All tours</option>
-                                {tours.map((tour) => (
-                                    <option key={tour} value={tour}>
-                                        {tour}
-                                    </option>
-                                ))}
-                            </select>
+                                <span className="absolute inset-0 bg-gradient-to-r from-[--color-brand] via-fuchsia-500 to-rose-500 opacity-90 transition-transform duration-300 group-hover:scale-105" />
+                                <span className="relative flex items-center gap-2">
+                                    {loading ? (
+                                        <>
+                                            <span className="h-2 w-2 animate-ping rounded-full bg-white" />
+                                            <span>Predicting…</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>Predict setlist</span>
+                                        </>
+                                    )}
+
+                                </span>
+                            </button>
                         </div>
-                    </div>
-                    <div className="grid sm:grid-cols-3 gap-4 mt-4">
-                        <Knob
-                            label="Pages"
-                            value={pages}
-                            onChange={(value) => setPages(Number(value))}
-                            min={1}
-                            max={10}
-                        />
-                        <Knob
-                            label="Top K"
-                            value={topK}
-                            onChange={(value) => setTopK(Number(value))}
-                            min={1}
-                            max={50}
-                        />
-                        <Knob
-                            label="Half-life (days)"
-                            value={halfLife}
-                            onChange={(value) => setHalfLife(Number(value))}
-                            min={7}
-                            max={1000}
-                        />
-                        <Knob
-                            label="Alpha"
-                            value={alpha}
-                            step="0.1"
-                            onChange={(value) => setAlpha(Number(value))}
-                            min={0}
-                            max={5}
-                        />
-                        <Knob
-                            label="Beta"
-                            value={beta}
-                            step="0.1"
-                            onChange={(value) => setBeta(Number(value))}
-                            min={0}
-                            max={5}
-                        />
-                    </div>
-                    <div className="mt-4">
-                        <button
-                            onClick={predict}
-                            disabled={loadingPrediction}
-                            className={cls("px-5 py-2 rounded-xl text-white",
-                                loadingPrediction ? "bg-gray-400" : "bg-black hover:opacity-90"
-                            )}
-                        >
-                            {loadingPrediction ? "Predicting…" : "Predict setlist"}
-                        </button>
-                    </div>
+                        <p className="text-sm text-slate-400">
+                            We tune the recency weighting automatically — no sliders, just smart predictions.
+                        </p>
+                    </form>
+                    {artist && !loading && !error && (
+                        <p className="mt-4 text-sm text-slate-300">
+                            Predicting for <span className="font-semibold text-white">{artist.name}</span>.
+                        </p>
+                    )}
+                    {error && (
+                        <div className="mt-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                            {error}
+                        </div>
+                    )}
                 </section>
-                {error && (
-                    <div className="bg-red-50 text-red-700 border border-red-200 px-4 py-3 rounded-xl">
-                        {error}
+                <section className="space-y-5 rounded-3xl border border-white/10 bg-slate-900/50 p-6 shadow-[0_20px_60px_rgba(8,15,40,0.55)] backdrop-blur-xl">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div>
+                        <h2 className="text-xl font-semibold text-white">Predicted set</h2>
+                        <p className="text-sm text-slate-400">
+                            {prediction
+                                ? `Analysed ${formatNumber(prediction.meta?.pages_fetched ?? 0)} pages of recent shows.`
+                                : "Run a prediction to see the most likely openers, sing-alongs, and deep cuts."}
+                        </p>
                     </div>
-                )}
-                <section className="bg-white shadow-sm rounded-2xl p-4 border space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold">Predicted songs</h2>
-                        {prediction && (
-                            <div className="text-sm text-gray-500">
-                                Model: {prediction.model?.name ?? "—"}
-                            </div>
+                        {prediction?.model?.name && (
+                            <span className="rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300">
+                                {prediction.model.name}
+                            </span>
                         )}
                     </div>
                     <SongTable
@@ -176,26 +124,30 @@ export default function App() {
                         sortDir={sortDir}
                         onSort={toggleSort}
                         formatNumber={formatNumber}
+                        loading={loading}
                     />
                 </section>
-            </main>
+            </div>
         </div>
     );
 }
 
-function Knob({ label, value, onChange, min, max, step = 1 }) {
+function GradientBackdrop() {
     return (
-        <label className="block text-sm">
-            <span className="block mb-1">{label}</span>
-            <input
-                type="number"
-                className="w-full border rounded-xl px-3 py-2"
-                value={value}
-                min={min}
-                max={max}
-                step={step}
-                onChange={(e) => onChange(e.target.value)}
-            />
-        </label>
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -top-32 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-[--color-brand]/30 blur-[120px]" />
+            <div className="absolute bottom-[-18%] left-[-5%] h-96 w-96 rounded-full bg-rose-500/20 blur-[140px]" />
+            <div className="absolute bottom-[-25%] right-[-5%] h-[28rem] w-[28rem] rounded-full bg-sky-500/20 blur-[160px]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(148,163,255,0.12),_transparent_55%)]" />
+        </div>
+    );
+}
+
+function StatPill({ label, value }) {
+    return(
+        <div className="flex flex-col items-start gap-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm text-slate-200 shadow-inner">
+            <span className="text-xs uppercase tracking-[0.4em] text-slate-400">{label}</span>
+            <span className="text-lg font-semibold text-white">{value}</span>
+        </div>
     );
 }

@@ -4,14 +4,15 @@
 
 :root {
     font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
-    --color-brand: rgb(99 102 241);
+    color-scheme: dark;
+    --color-brand: #c084fc;
 }
-
 body {
     min-height: 100vh;
-    background: linear-gradient(180deg, #f8fafc 0%, #f5f3ff 40%, #eef2ff 100%);
-    color: rgb(31 41 55);
-}
-.card {
-    @apply bg-white/95 backdrop-blur rounded-xl border border-gray-100 shadow;
+    margin: 0;
+    background-color: #0f172a;
+    background-image: radial-gradient(circle at 20% 20%, rgba(148, 163, 255, 0.12), transparent 55%),
+    radial-gradient(circle at 80% 10%, rgba(244, 114, 182, 0.1), transparent 60%),
+    radial-gradient(circle at 50% 100%, rgba(56, 189, 248, 0.14), transparent 55%);
+    color: rgb(226 232 240);
 }

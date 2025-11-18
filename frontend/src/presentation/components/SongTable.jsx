@@ -7,54 +7,65 @@ const headers = [
     { key: "pos", label: "Typical position" },
 ];
 
-export default function SongTable({ songs, sortKey, sortDir, onSort, formatNumber }) {
+export default function SongTable({ songs, sortKey, sortDir, onSort, formatNumber, loading = false }) {
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center gap-3 py-10 text-sm text-slate-300">
+                <span className="h-3 w-3 animate-ping rounded-full bg-[--color-brand]" />
+                <span className="tracking-[0.4em] uppercase">Predicting…</span>
+            </div>
+        );
+    }
+
     if (!songs?.length) {
         return (
-            <div className="text-sm text-gray-500">Run a prediction to see likely songs.</div>
+            <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-slate-400">
+                Run a prediction to see likely songs.
+            </div>
         );
     }
 
     return (
-        <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50">
-                <tr>
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+            <table className="min-w-full text-left text-sm text-slate-200">
+                <thead>
+                <tr className="bg-white/10 text-xs uppercase tracking-[0.3em] text-slate-400">
                     {headers.map((header) => (
-                        <th key={header.key} className="px-4 py-2 text-left">
+                        <th key={header.key} className="px-4 py-3">
                             <button
                                 type="button"
-                                className="flex items-center gap-1 font-medium text-gray-600"
+                                className="flex items-center gap-2 font-semibold text-slate-200 transition hover:text-white"
                                 onClick={() => onSort(header.key === "title" ? "title" : header.key)}
                             >
                                 <span>{header.label}</span>
                                 {sortKey === header.key && (
-                                    <span>{sortDir === "asc" ? "↑" : "↓"}</span>
+                                    <span className="text-[--color-brand]">{sortDir === "asc" ? "↑" : "↓"}</span>
                                 )}
                             </button>
                         </th>
                     ))}
-                    <th className="px-4 py-2 text-left">Last seen</th>
+                    <th className="px-4 py-3">Last seen</th>
                 </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-white/10">
                 {songs.map((song) => (
-                    <tr key={song.title} className="hover:bg-gray-50">
-                        <td className="px-4 py-2 font-medium">{song.title}</td>
-                        <td className="px-4 py-2">
+                    <tr key={song.title} className="transition hover:bg-white/10">
+                        <td className="px-4 py-3 text-base font-semibold text-white">{song.title}</td>
+                        <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
-                                    <span className="w-16 tabular-nums">
+                                    <span className="w-16 tabular-nums text-slate-100">
                                         {formatNumber(song.probability * 100, 1)}%
                                     </span>
                                 <ProbabilityBar probability={song.probability} />
                             </div>
                         </td>
-                        <td className="px-4 py-2 tabular-nums">
+                        <td className="px-4 py-3 tabular-nums text-slate-100">
                             {formatNumber(song.appearances)}
                         </td>
-                        <td className="px-4 py-2 tabular-nums">
+                        <td className="px-4 py-3 tabular-nums text-slate-100">
                             {song.typicalPosition ? `#${formatNumber(song.typicalPosition)}` : "—"}
                         </td>
-                        <td className="px-4 py-2 text-gray-500">
+                        <td className="px-4 py-3 text-slate-300">
                             {song.lastSeen ? song.lastSeen : "—"}
                         </td>
                     </tr>
