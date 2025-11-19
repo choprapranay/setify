@@ -101,16 +101,36 @@ class RecencyBetaPredictionService:
         def smoothed_prob(weighted: float) -> float:
             return (weighted + config.alpha) / (effective_shows + config.alpha + config.beta)
 
+        # Calculate base historical scores (recency-weighted)
         historical_scores = {
             title: smoothed_prob(stats["weighted"])
             for title, stats in song_stats.items()
         }
 
-        total_hist = sum(historical_scores.values()) or 1.0
-        historical_scores = {k: v / total_hist for k, v in historical_scores.items()}
+        # Calculate frequency-based scores (appearance rate, regardless of recency)
+        # This ensures popular songs from older setlists aren't completely ignored
+        frequency_scores = {
+            title: stats["count"] / float(used_shows) if used_shows > 0 else 0.0
+            for title, stats in song_stats.items()
+        }
+
+        # Hybrid scoring: combine recency-weighted (85%) with frequency-based (15%)
+        # Favor newer songs more while still including historically popular songs
+        hybrid_scores = {}
+        for title in song_stats.keys():
+            recency_score = historical_scores.get(title, 0.0)
+            frequency_score = frequency_scores.get(title, 0.0)
+            # Normalize frequency score to similar scale as recency score
+            max_freq = max(frequency_scores.values()) if frequency_scores.values() else 1.0
+            normalized_freq = frequency_score / max_freq if max_freq > 0 else 0.0
+            # Weighted combination: 85% recency, 15% frequency (favors newer songs)
+            hybrid_scores[title] = 0.85 * recency_score + 0.15 * normalized_freq
+
+        total_hybrid = sum(hybrid_scores.values()) or 1.0
+        hybrid_scores = {k: v / total_hybrid for k, v in hybrid_scores.items()}
 
         if new_album_tracks:
-            final_scores = {song: float(score) for song, score in historical_scores.items()}
+            final_scores = {song: float(score) for song, score in hybrid_scores.items()}
 
             for track in new_album_tracks:
                 title = track["name"]
@@ -128,9 +148,20 @@ class RecencyBetaPredictionService:
             final_scores = {k: v / total for k, v in final_scores.items()}
 
         else:
-            final_scores = historical_scores
+            final_scores = hybrid_scores
 
-        ranked_final = list(final_scores.items())[: config.top_k]
+        # Sort by score and take top_k
+        ranked_final = sorted(final_scores.items(), key=lambda x: x[1], reverse=True)[: config.top_k]
+        
+        # Apply power scaling to concentrate probability on top songs
+        # This makes the top songs have much higher probabilities (e.g., top song ~60-70%)
+        # Using power of 2.5 to create a strong concentration effect
+        POWER_SCALE = 2.5
+        scaled_scores = [(title, prob ** POWER_SCALE) for title, prob in ranked_final]
+        
+        # RE-NORMALIZE after scaling so probabilities sum to 1.0
+        scaled_total = sum(prob for _, prob in scaled_scores) or 1.0
+        ranked_final = [(title, prob / scaled_total) for title, prob in scaled_scores]
 
         songs = []
         for title, prob in ranked_final:
@@ -165,7 +196,7 @@ class RecencyBetaPredictionService:
             unique_songs=len(song_stats),
             confidence=confidence,
             songs=songs,
-            model_name="recency_beta_v1+spotify_blend_v1",
+            model_name="recency_beta_v3+power_scaled",
             model_params={
                 "half_life_days": config.half_life_days,
                 "alpha": config.alpha,
