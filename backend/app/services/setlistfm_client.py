@@ -83,12 +83,19 @@ class SetlistFMClient:
         meta = SetlistMeta(total=0, items_per_page=0, pages_fetched=0, artist_name=None)
 
         async with httpx.AsyncClient(timeout=self._timeout) as client:
-            for page in range(1, max_pages + 1):
-                data = await self._request(client, f"/artist/{mbid}/setlists", {"p": page})
-                if not data:
+            # Fetch all pages in parallel
+            tasks = [
+                self._request(client, f"/artist/{mbid}/setlists", {"p": page})
+                for page in range(1, max_pages + 1)
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            for page_idx, data in enumerate(results, start=1):
+                # Skip if request failed or returned empty
+                if isinstance(data, Exception) or not data:
                     break
-
-                if page == 1 and not artist_name:
+                
+                if page_idx == 1 and not artist_name:
                     page_sets = data.get("setlist", []) or []
                     if page_sets:
                         first_setlist = page_sets[0]
@@ -100,7 +107,7 @@ class SetlistFMClient:
                 for raw in page_sets:
                     songs = self._flatten_songs(raw)
                     setlist = Setlist(
-                        id=raw.get("id", f"{mbid}:{page}"),
+                        id=raw.get("id", f"{mbid}:{page_idx}"),
                         event_date=_parse_event_date(raw.get("eventDate")),
                         tour=(raw.get("tour") or {}).get("name"),
                         songs=songs,
@@ -110,7 +117,7 @@ class SetlistFMClient:
                 meta = SetlistMeta(
                     total=int(data.get("total", meta.total or 0)),
                     items_per_page=int(data.get("itemsPerPage", meta.items_per_page or 0)),
-                    pages_fetched=page,
+                    pages_fetched=page_idx,
                     artist_name=artist_name,
                 )
 

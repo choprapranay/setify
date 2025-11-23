@@ -70,12 +70,23 @@ async def predict(mbid: str = Query(...), pages: int = Query(5)):
                 for song in setlist.songs:
                     all_setlist_songs.add(song.title)
             
+            # Get Spotify data once (match_setlist_songs_to_spotify calls this internally, so we avoid duplicate calls)
             all_spotify_tracks = spotify_client.get_artist_track_data(artist_name)
             
-            spotify_track_matches = spotify_client.match_setlist_songs_to_spotify(
-                list(all_setlist_songs), 
-                artist_name
-            )
+            # Match setlist songs to Spotify tracks using the already-fetched data
+            # Normalize song names for matching
+            def normalize_name(name: str) -> str:
+                name = name.lower().strip()
+                name = name.replace("(live)", "").replace("[live]", "").replace("(remix)", "").replace("[remix]", "")
+                name = name.replace("(feat.", "(ft.").replace("(ft.", "").replace("featuring", "ft")
+                return " ".join(name.split())
+            
+            matches = {}
+            for setlist_name in all_setlist_songs:
+                normalized = normalize_name(setlist_name)
+                if normalized in all_spotify_tracks:
+                    matches[setlist_name] = all_spotify_tracks[normalized]
+            spotify_track_matches = matches
         except ValueError as exc:
             spotify_track_matches = {}
             all_spotify_tracks = {}
