@@ -35,9 +35,9 @@ export default function App() {
                             study for your next concert
                         </span>
                     </div>
-                    <h1 className="text-5xl font-black tracking-tight bg-gradient-to-r from-[--color-brand] via-orange-400 to-amber-400 bg-clip-text text-transparent sm:text-6xl">setify</h1>
+                    <h1 className="text-5xl font-black tracking-tight text-[--color-brand] sm:text-6xl">setify</h1>
                     <p className="max-w-2xl text-base text-slate-400 leading-relaxed">
-                        Drop an artist name and see what's been on their setlists. Perfect for prepping your setlist or just seeing what's likely to come up.
+                        Drop an artist name and see what's been on their setlists. Perfect for getting your studying on or curating a new playlist to listen to your favorites.
                     </p>
                 </header>
 
