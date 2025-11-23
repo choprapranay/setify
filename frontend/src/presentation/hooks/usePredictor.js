@@ -45,7 +45,6 @@ export function usePredictor() {
             }
             setArtist(result);
             
-            // Run prediction immediately
             const predictionResult = await predictSetlist({
                 mbid: result.mbid,
                 pages: 5,
