@@ -27,41 +27,29 @@ export default function App() {
     return (
         <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
             <GradientBackdrop />
-            <div className="relative z-10 mx-auto flex max-w-5xl flex-col gap-10 px-4 py-10">
-                <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="space-y-3">
-                        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.45em] text-slate-400">
-                            <span className="h-2 w-2 rounded-full bg-[--color-brand] shadow-[0_0_18px_rgba(192,132,252,0.8)]" />
-                            Live setlist oracle
+            <div className="relative z-10 mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 sm:py-8">
+                <header className="space-y-3">
+                    <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-[--color-brand] shadow-[0_0_18px_rgba(245,158,11,0.6)]" />
+                        <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                            study for your next concert
                         </span>
-                        <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">Setify</h1>
-                        <p className="max-w-xl text-base text-slate-300">
-                            Type an artist, hit predict, and we will analyse their recent shows to surface the
-                            songs most likely to appear on a setlist.
-                        </p>
                     </div>
-                    {prediction && (
-                        <div className="flex flex-wrap gap-3">
-                            <StatPill
-                                label="Confidence"
-                                value={`${formatNumber(prediction.confidence * 100, 1)}%`}
-                            />
-                            <StatPill label="Shows" value={formatNumber(prediction.setsConsidered)} />
-                            <StatPill label="Unique songs" value={formatNumber(prediction.uniqueSongs)} />
-                        </div>
-                    )}
+                    <h1 className="text-5xl font-black tracking-tight bg-gradient-to-r from-[--color-brand] via-orange-400 to-amber-400 bg-clip-text text-transparent sm:text-6xl">setify</h1>
+                    <p className="max-w-2xl text-base text-slate-400 leading-relaxed">
+                        Drop an artist name and see what's been on their setlists. Perfect for prepping your setlist or just seeing what's likely to come up.
+                    </p>
                 </header>
 
-                <section className="rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-[0_30px_80px_rgba(15,23,42,0.45)] backdrop-blur-xl">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                            <label className="flex flex-1 flex-col text-sm font-medium text-slate-300">
+                <section className="rounded-2xl border border-[--color-brand]/20 bg-slate-900/60 p-5 shadow-[0_20px_60px_rgba(245,158,11,0.2)] backdrop-blur-xl">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                            <label className="flex flex-1 flex-col text-sm font-medium text-slate-400">
                                 Artist
-                                <div className="mt-2 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 shadow-inner transition focus-within:border-[--color-brand] focus-within:bg-slate-900/60">
-                                    <span className="text-lg text-[--color-brand]">🎶</span>
+                                <div className="mt-2 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 shadow-inner transition focus-within:border-[--color-brand] focus-within:bg-slate-900/60">
                                     <input
-                                        className="w-full bg-transparent text-base font-medium text-white placeholder:text-slate-500 focus:outline-none"
-                                        placeholder="e.g. The 1975"
+                                        className="w-full bg-transparent text-base font-medium text-white placeholder:text-slate-600 focus:outline-none"
+                                        placeholder="gunna, drake, travis scott..."
                                         value={artistQuery}
                                         onChange={(event) => setArtistQuery(event.target.value)}
                                     />
@@ -70,53 +58,38 @@ export default function App() {
                             <button
                                 type="submit"
                                 disabled={loading || !canPredict}
-                                className="group relative inline-flex items-center justify-center overflow-hidden rounded-2xl px-6 py-3 font-semibold text-white shadow-lg transition focus:outline-none focus:ring-2 focus:ring-[--color-brand]/70 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="group relative inline-flex items-center justify-center overflow-hidden rounded-xl px-6 py-2.5 font-semibold text-white shadow-lg transition focus:outline-none focus:ring-2 focus:ring-[--color-brand]/70 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                <span className="absolute inset-0 bg-gradient-to-r from-[--color-brand] via-fuchsia-500 to-rose-500 opacity-90 transition-transform duration-300 group-hover:scale-105" />
+                                <span className="absolute inset-0 bg-gradient-to-r from-[--color-brand] via-orange-500 to-amber-500 opacity-90 transition-transform duration-300 group-hover:scale-105" />
                                 <span className="relative flex items-center gap-2">
                                     {loading ? (
                                         <>
                                             <span className="h-2 w-2 animate-ping rounded-full bg-white" />
-                                            <span>Predicting…</span>
+                                            <span>Checking...</span>
                                         </>
                                     ) : (
                                         <>
-                                            <span>Predict setlist</span>
+                                            <span>GO</span>
                                         </>
                                     )}
-
                                 </span>
                             </button>
                         </div>
-                        <p className="text-sm text-slate-400">
-                            We tune the recency weighting automatically — no sliders, just smart predictions.
-                        </p>
                     </form>
-                    {artist && !loading && !error && (
-                        <p className="mt-4 text-sm text-slate-300">
-                            Predicting for <span className="font-semibold text-white">{artist.name}</span>.
-                        </p>
-                    )}
                     {error && (
-                        <div className="mt-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                        <div className="mt-3 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">
                             {error}
                         </div>
                     )}
                 </section>
-                <section className="space-y-5 rounded-3xl border border-white/10 bg-slate-900/50 p-6 shadow-[0_20px_60px_rgba(8,15,40,0.55)] backdrop-blur-xl">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div>
-                        <h2 className="text-xl font-semibold text-white">Predicted set</h2>
-                        <p className="text-sm text-slate-400">
+                <section className="space-y-4 rounded-2xl border border-[--color-brand]/20 bg-slate-900/50 p-5 shadow-[0_20px_60px_rgba(245,158,11,0.15)] backdrop-blur-xl">
+                    <div>
+                        <h2 className="text-lg font-semibold text-white mb-1">Predicted Setlist</h2>
+                        <p className="text-xs text-slate-500">
                             {prediction
-                                ? `Analysed ${formatNumber(prediction.meta?.pages_fetched ?? 0)} pages of recent shows.`
-                                : "Run a prediction to see the most likely openers, sing-alongs, and deep cuts."}
+                                ? `Based on ${formatNumber(prediction.meta?.pages_fetched ?? 0)} pages of recent shows`
+                                : "Start typing an artist above to see what's been on their setlists"}
                         </p>
-                    </div>
-                        {prediction?.model?.name && (
-                            <span className="rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300">
-                                {prediction.model.name}
-                            </span>
-                        )}
                     </div>
                     <SongTable
                         songs={sortedSongs}
@@ -135,19 +108,10 @@ export default function App() {
 function GradientBackdrop() {
     return (
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute -top-32 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-[--color-brand]/30 blur-[120px]" />
-            <div className="absolute bottom-[-18%] left-[-5%] h-96 w-96 rounded-full bg-rose-500/20 blur-[140px]" />
-            <div className="absolute bottom-[-25%] right-[-5%] h-[28rem] w-[28rem] rounded-full bg-sky-500/20 blur-[160px]" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(148,163,255,0.12),_transparent_55%)]" />
-        </div>
-    );
-}
-
-function StatPill({ label, value }) {
-    return(
-        <div className="flex flex-col items-start gap-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm text-slate-200 shadow-inner">
-            <span className="text-xs uppercase tracking-[0.4em] text-slate-400">{label}</span>
-            <span className="text-lg font-semibold text-white">{value}</span>
+            <div className="absolute -top-32 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-[--color-brand]/25 blur-[120px]" />
+            <div className="absolute bottom-[-18%] left-[-5%] h-96 w-96 rounded-full bg-orange-500/15 blur-[140px]" />
+            <div className="absolute bottom-[-25%] right-[-5%] h-[28rem] w-[28rem] rounded-full bg-amber-500/15 blur-[160px]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(245,158,11,0.08),_transparent_55%)]" />
         </div>
     );
 }
