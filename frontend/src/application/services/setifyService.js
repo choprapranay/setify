@@ -16,11 +16,10 @@ export async function loadSetlists({ mbid, pages }) {
     };
 }
 
-export async function predictSetlist({ mbid, pages, tour }) {
+export async function predictSetlist({ mbid, pages }) {
     const prediction = await fetchPrediction({
         mbid,
         pages,
-        tour,
     });
     return createPrediction(prediction);
 }
