@@ -11,6 +11,8 @@ class Settings:
     def __init__(self) -> None:
         self.setlistfm_base: str = os.getenv("SETLISTFM_BASE", "https://api.setlist.fm/rest/1.0")
         self.setlistfm_api_key: str = os.getenv("SETLISTFM_API_KEY", "")
+        self.spotify_client_id: str = os.getenv("SPOTIFY_CLIENT_ID", "")
+        self.spotify_client_secret: str = os.getenv("SPOTIFY_CLIENT_SECRET", "")
         allowed = os.getenv(
             "API_ALLOWED_ORIGINS",
             "http://127.0.0.1:8000",

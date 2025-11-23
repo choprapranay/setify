@@ -44,10 +44,10 @@ export function usePredictor() {
                 throw new Error("Artist not found");
             }
             setArtist(result);
+            
             const predictionResult = await predictSetlist({
                 mbid: result.mbid,
                 pages: 5,
-                tour: null,
             });
             setPrediction(predictionResult);
         } catch (err) {

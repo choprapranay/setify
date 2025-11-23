@@ -40,6 +40,7 @@ export function createPrediction(payload) {
                 weightedAppearances: song.weighted_appearances ?? 0,
                 typicalPosition: song.typical_position ?? null,
                 lastSeen: song.last_seen ?? null,
+                spotifyTrackId: song.spotify_track_id ?? null,
             }))
             : [],
     };

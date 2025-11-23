@@ -5,7 +5,7 @@ def search_artist_mb(artist: str):
     params = {"query": artist, "fmt": "json", "limit": 5}
 
     resp = requests.get(url, params=params, headers={
-        "User-Agent": "SetifyApp/1.0 (contact@example.com)"
+        "User-Agent": "SetifyApp/1.0 pcawsome123@gmail.com"
     })
     resp.raise_for_status()
 
