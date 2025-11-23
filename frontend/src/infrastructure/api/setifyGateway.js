@@ -8,10 +8,9 @@ export async function fetchSetlists({ mbid, pages }) {
     return httpClient.get("api/setlists", { mbid, pages });
 }
 
-export async function fetchPrediction({ mbid, pages, tour }) {
+export async function fetchPrediction({ mbid, pages }) {
     return httpClient.get("api/predict", {
         mbid,
         pages,
-        tour,
     });
 }
