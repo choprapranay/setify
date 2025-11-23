@@ -51,10 +51,8 @@ class SpotifyService:
     def _normalize_song_name(self, name: str) -> str:
         """Normalize song name for exact matching"""
         name = name.lower().strip()
-        # Remove common suffixes and prefixes
         name = name.replace("(live)", "").replace("[live]", "").replace("(remix)", "").replace("[remix]", "")
         name = name.replace("(feat.", "(ft.").replace("(ft.", "").replace("featuring", "ft")
-        # Remove extra whitespace
         name = " ".join(name.split())
         return name
 
@@ -139,7 +137,6 @@ class SpotifyService:
         tracks = []
         for t in items:
             track_id = t["id"]
-            # Get full track details for popularity
             track_details = self.get_track_details(track_id)
             tracks.append({
                 "name": t["name"].strip(),
@@ -192,11 +189,9 @@ class SpotifyService:
 
         track_map = {}
         
-        # Get top tracks (these are most likely to be played)
         top_tracks = self.get_top_tracks(artist_id, limit=50)
         for track in top_tracks:
             normalized = self._normalize_song_name(track["name"])
-            # Keep the highest popularity if duplicate normalized names
             if normalized not in track_map or track["popularity"] > track_map[normalized].get("popularity", 0):
                 track_map[normalized] = {
                     "name": track["name"],
@@ -205,13 +200,11 @@ class SpotifyService:
                     "source": "top_tracks",
                 }
         
-        # Get newest album tracks
         newest_album = self.get_newest_album(artist_id)
         if newest_album:
             album_tracks = self.get_album_tracks(newest_album["id"])
             for track in album_tracks:
                 normalized = self._normalize_song_name(track["name"])
-                # Prefer top tracks over album tracks, but add if not present
                 if normalized not in track_map:
                     track_map[normalized] = {
                         "name": track["name"],
@@ -235,7 +228,6 @@ class SpotifyService:
 
         matches = {}
         for setlist_name in setlist_song_names:
-            # Try exact normalized match
             normalized = self._normalize_song_name(setlist_name)
             if normalized in spotify_tracks:
                 matches[setlist_name] = spotify_tracks[normalized]

@@ -88,9 +88,7 @@ class SetlistFMClient:
                 if not data:
                     break
 
-                # Extract artist name from first page response
                 if page == 1 and not artist_name:
-                    # Try to get artist name from setlist data
                     page_sets = data.get("setlist", []) or []
                     if page_sets:
                         first_setlist = page_sets[0]
