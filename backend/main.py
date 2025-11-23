@@ -23,9 +23,14 @@ def create_app() -> FastAPI:
 
     app = FastAPI(title="Setify API")
 
+    # Combine localhost origins with environment-configured origins
+    allowed_origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    if settings.api_allowed_origins:
+        allowed_origins.extend(settings.api_allowed_origins)
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+        allow_origins=allowed_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
