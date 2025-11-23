@@ -17,6 +17,7 @@ class SetlistMeta:
     total: int
     items_per_page: int
     pages_fetched: int
+    artist_name: Optional[str] = None
 
 @dataclass
 class Setlist:
@@ -33,6 +34,7 @@ class SongPrediction:
     weighted_appearances: float
     typical_position: Optional[int]
     last_seen: Optional[datetime]
+    spotify_track_id: Optional[str] = None
 
 
 @dataclass
@@ -42,7 +44,6 @@ class PredictionSummary:
     sets_considered: int
     effective_shows: float
     unique_songs: int
-    confidence: float
     songs: List[SongPrediction]
     model_name: str
     model_params: dict
