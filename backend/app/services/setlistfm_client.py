@@ -79,13 +79,24 @@ class SetlistFMClient:
 
     async def fetch_setlists(self, mbid: str, max_pages: int = 5) -> Tuple[List[Setlist], SetlistMeta]:
         all_sets: List[Setlist] = []
-        meta = SetlistMeta(total=0, items_per_page=0, pages_fetched=0)
+        artist_name = None
+        meta = SetlistMeta(total=0, items_per_page=0, pages_fetched=0, artist_name=None)
 
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             for page in range(1, max_pages + 1):
                 data = await self._request(client, f"/artist/{mbid}/setlists", {"p": page})
                 if not data:
                     break
+
+                # Extract artist name from first page response
+                if page == 1 and not artist_name:
+                    # Try to get artist name from setlist data
+                    page_sets = data.get("setlist", []) or []
+                    if page_sets:
+                        first_setlist = page_sets[0]
+                        artist_info = first_setlist.get("artist", {})
+                        if isinstance(artist_info, dict):
+                            artist_name = artist_info.get("name")
 
                 page_sets = data.get("setlist", []) or []
                 for raw in page_sets:
@@ -102,6 +113,7 @@ class SetlistFMClient:
                     total=int(data.get("total", meta.total or 0)),
                     items_per_page=int(data.get("itemsPerPage", meta.items_per_page or 0)),
                     pages_fetched=page,
+                    artist_name=artist_name,
                 )
 
                 if not page_sets:
