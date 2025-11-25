@@ -1,6 +1,6 @@
 # Setify
 
-Check out project here: [INSERT LINK]
+Check out project here: [www.setify.studio]
 
 ## Why Setify?
 
