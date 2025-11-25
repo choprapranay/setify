@@ -41,6 +41,9 @@ export function usePredictor() {
             setError("Enter at least two characters.");
             return;
         }
+        if (hasSeenColdStartNotice) {
+            setFirstVisitNotice("");
+        }
         if (!hasSeenColdStartNotice) {
             const notice =
                 "Heads up: the Render backend can take up to ~50 seconds to spin up on the first run. Thanks for your patience!";
