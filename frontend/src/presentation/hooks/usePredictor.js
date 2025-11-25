@@ -2,6 +2,8 @@ import { useCallback, useMemo, useState } from "react";
 
 import { findArtistByName, predictSetlist } from "../../application/services/setifyService";
 
+const FIRST_VISIT_NOTICE_KEY = "setify:first-visit-notice";
+
 const formatNumber = (value, digits = 0) =>
     new Intl.NumberFormat(undefined, {
         minimumFractionDigits: digits,
@@ -15,8 +17,13 @@ export function usePredictor() {
     const [prediction, setPrediction] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [firstVisitNotice, setFirstVisitNotice] = useState("");
 
     const [sortState, setSortState] = useState(["prob", "desc"]);
+    const [hasSeenColdStartNotice, setHasSeenColdStartNotice] = useState(() => {
+        if (typeof window === "undefined") return true;
+        return window.localStorage.getItem(FIRST_VISIT_NOTICE_KEY) === "true";
+    });
 
     const canPredict = artistQuery.trim().length > 1;
 
@@ -33,6 +40,15 @@ export function usePredictor() {
         if (!canPredict) {
             setError("Enter at least two characters.");
             return;
+        }
+        if (!hasSeenColdStartNotice) {
+            const notice =
+                "Heads up: the Render backend can take up to ~50 seconds to spin up on the first run. Thanks for your patience!";
+            setFirstVisitNotice(notice);
+            setHasSeenColdStartNotice(true);
+            if (typeof window !== "undefined") {
+                window.localStorage.setItem(FIRST_VISIT_NOTICE_KEY, "true");
+            }
         }
         setLoading(true);
         setError(null);
@@ -56,7 +72,7 @@ export function usePredictor() {
         } finally {
             setLoading(false);
         }
-    }, [artistQuery, canPredict]);
+    }, [artistQuery, canPredict, hasSeenColdStartNotice]);
 
     const sortedSongs = useMemo(() => {
         if (!prediction?.songs?.length) return [];
@@ -110,6 +126,7 @@ export function usePredictor() {
             sortDir: sortState[1],
             canPredict,
             formatNumber,
+            firstVisitNotice,
         },
         actions: {
             setArtistQuery,

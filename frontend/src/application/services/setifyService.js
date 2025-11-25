@@ -1,3 +1,4 @@
+import { track } from "@vercel/analytics/react";
 import { createArtist, createPrediction, createSetlist } from "../../domain/models";
 import { fetchPrediction, fetchSetlists, searchArtist } from "../../infrastructure/api/setifyGateway";
 
@@ -17,9 +18,21 @@ export async function loadSetlists({ mbid, pages }) {
 }
 
 export async function predictSetlist({ mbid, pages }) {
-    const prediction = await fetchPrediction({
-        mbid,
-        pages,
-    });
+    let prediction;
+    try {
+        track("predict_route_called", { mbid, pages });
+        prediction = await fetchPrediction({
+            mbid,
+            pages,
+        });
+        track("predict_route_succeeded", { mbid, pages });
+    } catch (error) {
+        track("predict_route_failed", {
+            mbid,
+            pages,
+            reason: error?.message?.slice(0, 120) ?? "unknown",
+        });
+        throw error;
+    }
     return createPrediction(prediction);
 }
