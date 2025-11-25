@@ -231,7 +231,7 @@ class RecencyBetaPredictionService:
         
         for song_name, score in ranked:
             prob = score / total_score
-            prob = prob * 10.0
+            prob = min(prob * 10.0, 100.0)
             
             original_name = display_to_original.get(song_name, song_name)
             if original_name not in song_data and song_name in song_data:
